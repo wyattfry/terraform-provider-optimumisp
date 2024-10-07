@@ -4,21 +4,20 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"flag"
-	"log"
-
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-provider-scaffolding-framework/internal/provider"
+	"fmt"
+	"os"
+	"terraform-provider-hashicups/optimumisp"
 )
 
 var (
-	// these will be set by the goreleaser configuration
-	// to appropriate values for the compiled binary.
-	version string = "dev"
+// these will be set by the goreleaser configuration
+// to appropriate values for the compiled binary.
+// version string = "dev"
 
-	// goreleaser can pass other information to the main package, such as the specific commit
-	// https://goreleaser.com/cookbooks/using-main.version/
+// goreleaser can pass other information to the main package, such as the specific commit
+// https://goreleaser.com/cookbooks/using-main.version/
 )
 
 func main() {
@@ -27,17 +26,37 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-	opts := providerserver.ServeOpts{
-		// TODO: Update this string with the published name of your provider.
-		// Also update the tfplugindocs generate command to either remove the
-		// -provider-name flag or set its value to the updated provider name.
-		Address: "registry.terraform.io/hashicorp/scaffolding",
-		Debug:   debug,
+	client := optimumisp.Client{}
+	client.ProcessLogin(os.Getenv("OPTIMUM_USERNAME"), os.Getenv("OPTIMUM_PASSWORD"))
+	fmt.Println("Getting Port Fwd Rules")
+	rules, _ := client.GetPortForwardingRules()
+	for idx, rule := range rules {
+		sld, err := json.MarshalIndent(rule, "", "  ")
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		fmt.Printf("Rule %d: %v\n\n", idx, string(sld))
 	}
 
-	err := providerserver.Serve(context.Background(), provider.New(version), opts)
-
-	if err != nil {
-		log.Fatal(err.Error())
+	name := rules[7].PortForwardingRule.PortForwardingRuleID.Name
+	idxs := []int{
+		rules[7].PortForwardingRule.PortForwardings[0].Index,
+		rules[7].PortForwardingRule.PortForwardings[1].Index,
 	}
+
+	client.DeletePortForwardingRule(name, idxs)
+
+	// opts := providerserver.ServeOpts{
+	// 	// TODO: Update this string with the published name of your provider.
+	// 	// Also update the tfplugindocs generate command to either remove the
+	// 	// -provider-name flag or set its value to the updated provider name.
+	// 	Address: "registry.terraform.io/hashicorp/scaffolding",
+	// 	Debug:   debug,
+	// }
+
+	// err := providerserver.Serve(context.Background(), provider.New(version), opts)
+
+	// if err != nil {
+	// 	log.Fatal(err.Error())
+	// }
 }
