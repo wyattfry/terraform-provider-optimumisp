@@ -4,11 +4,10 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"fmt"
+	"log"
 	"os"
-	"terraform-provider-hashicups/optimumisp"
+	"terraform-provider-optimumisp/optimumisp"
 )
 
 var (
@@ -27,24 +26,29 @@ func main() {
 	flag.Parse()
 
 	client := optimumisp.Client{}
+	username := os.Getenv("OPTIMUM_USERNAME")
+	password := os.Getenv("OPTIMUM_PASSWORD")
+	if username == "" || password == "" {
+		log.Fatalf("Environment variables OPTIMUM_USERNAME and OPTIMUM_PASSWORD must be set")
+	}
 	client.ProcessLogin(os.Getenv("OPTIMUM_USERNAME"), os.Getenv("OPTIMUM_PASSWORD"))
-	fmt.Println("Getting Port Fwd Rules")
-	rules, _ := client.GetPortForwardingRules()
-	for idx, rule := range rules {
-		sld, err := json.MarshalIndent(rule, "", "  ")
-		if err != nil {
-			fmt.Println("error:", err)
-		}
-		fmt.Printf("Rule %d: %v\n\n", idx, string(sld))
-	}
+	// fmt.Println("Getting Port Fwd Rules")
+	// rules, _ := client.GetPortForwardingRules()
+	// for idx, rule := range rules {
+	// 	sld, err := json.MarshalIndent(rule, "", "  ")
+	// 	if err != nil {
+	// 		fmt.Println("error:", err)
+	// 	}
+	// 	fmt.Printf("Rule %d: %v\n\n", idx, string(sld))
+	// }
 
-	name := rules[7].PortForwardingRule.PortForwardingRuleID.Name
-	idxs := []int{
-		rules[7].PortForwardingRule.PortForwardings[0].Index,
-		rules[7].PortForwardingRule.PortForwardings[1].Index,
-	}
+	// name := rules[7].PortForwardingRule.PortForwardingRuleID.Name
+	// idxs := []int{
+	// 	rules[7].PortForwardingRule.PortForwardings[0].Index,
+	// 	rules[7].PortForwardingRule.PortForwardings[1].Index,
+	// }
 
-	client.DeletePortForwardingRule(name, idxs)
+	// client.DeletePortForwardingRule(name, idxs)
 
 	// opts := providerserver.ServeOpts{
 	// 	// TODO: Update this string with the published name of your provider.

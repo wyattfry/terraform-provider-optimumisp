@@ -59,6 +59,7 @@ func (c *Client) DeletePortForwardingRule(ruleName string, indexes []int) error 
 	client := &http.Client{}
 	fmt.Printf("Sending delete request: %s\n\n%v\n", string(jsonBody), req)
 	resp, err := client.Do(req)
+	// getting a 404 response, perhaps due to missing Headers? XSRF?
 	fmt.Println("Sent delete request. Response:", resp)
 	if err != nil {
 		return fmt.Errorf("error sending port forwarding request: %v", err)
